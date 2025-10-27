@@ -1,0 +1,53 @@
+# ===== 作業系統 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 編輯器 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 備份檔案 =====
+*.bak
+*.backup
+*-old.*
+*-backup.*
+
+# ===== 暫存檔案 =====
+*.tmp
+*.temp
+~*
+
+# ===== 設定檔（包含敏感資訊）=====
+config.local.js
+secrets.js
+credentials.json
+
+# ===== 測試檔案 =====
+test-*.html
+*-test.html
+debug-*.html
+
+# ===== 文件草稿 =====
+*.draft.md
+NOTES.md
+TODO.md
+
+# ===== Node modules（如果未來需要）=====
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ===== 壓縮檔 =====
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# ===== 圖片（太大）=====
+# 如果未來有示意圖，記得加入 images/ 資料夾
+*.psd
+*.ai

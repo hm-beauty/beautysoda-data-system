@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查詢提交記錄 - 商家資料表單</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            display: none;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+
+        .message.success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+        }
+
+        .message.no-data {
+            background: #fef9e7;
+            border: 1px solid #f9e79f;
+            color: #856404;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .result-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .result-value {
+            color: #333;
+            word-break: break-word;
+        }
+
+        .result-value a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .result-value a:hover {
+            text-decoration: underline;
+        }
+
+        .image-links {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .image-link {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .image-link:hover {
+            background: #764ba2;
+            transform: translateX(5px);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .back-link a:hover {
+            color: #764ba2;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .result-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+
+            .result-label {
+                font-weight: 700;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 查詢提交記錄</h1>
+            <p>輸入您在表單中填寫的Email即可查詢所有提交記錄</p>
+        </div>
+
+        <div class="info-box">
+            <p>💡 <strong>提示：</strong></p>
+            <p>• 請輸入您提交表單時使用的Email</p>
+            <p>• 系統會顯示該Email的所有提交記錄</p>
+            <p>• 包含提交時間、店家資料、圖片連結等完整資訊</p>
+        </div>
+
+        <div class="search-box">
+            <div class="form-group">
+                <label for="emailInput">📧 請輸入您的Email：</label>
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="example@gmail.com"
+                    required
+                >
+            </div>
+            <button class="search-btn" id="searchBtn">
+                🔍 查詢記錄
+            </button>
+        </div>
+
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <p>查詢中，請稍候...</p>
+        </div>
+
+        <div class="message error" id="errorMessage"></div>
+        <div class="message success" id="successMessage"></div>
+        <div class="message no-data" id="noDataMessage">
+            😕 查無資料<br>
+            <small>請確認Email是否正確，或該Email尚未提交過表單</small>
+        </div>
+
+        <div class="results" id="resultsDiv"></div>
+
+        <div class="back-link">
+            <a href="merchant-form.html">← 返回填寫表單</a>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ 請將下方的 URL 替換成您的 Google Apps Script API URL
+        const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+        const emailInput = document.getElementById('emailInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const resultsDiv = document.getElementById('resultsDiv');
+
+        // 清除所有訊息
+        function clearMessages() {
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+            noDataMessage.classList.remove('show');
+            resultsDiv.classList.remove('show');
+        }
+
+        // 顯示錯誤訊息
+        function showError(message) {
+            clearMessages();
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        // 顯示無資料訊息
+        function showNoData() {
+            clearMessages();
+            noDataMessage.classList.add('show');
+        }
+
+        // 顯示結果
+        function showResults(data) {
+            clearMessages();
+            
+            if (!data || data.length === 0) {
+                showNoData();
+                return;
+            }
+
+            resultsDiv.innerHTML = '';
+            
+            data.forEach((record, index) => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                
+                let html = `<h3>📝 提交記錄 ${index + 1}</h3>`;
+                
+                // 提交時間
+                html += createResultRow('提交時間', record.submitTime);
+                
+                // 店家類型
+                html += createResultRow('店家類型', record.storeTypes);
+                
+                // 店家名稱
+                html += createResultRow('店家名稱', record.storeName);
+                
+                // 分店名稱
+                if (record.branchName) {
+                    html += createResultRow('分店名稱', record.branchName);
+                }
+                
+                // 聯絡資訊
+                html += createResultRow('聯絡人', record.contactPerson);
+                html += createResultRow('聯絡Email', record.contactEmail);
+                html += createResultRow('聯絡電話', record.contactPhone);
+                
+                // 地址
+                html += createResultRow('店家地址', record.storeAddress);
+                if (record.addressSupplement) {
+                    html += createResultRow('地址補充', record.addressSupplement);
+                }
+                
+                // 服務項目
+                html += createResultRow('服務類別', record.selectedCategory);
+                html += createResultRow('服務項目', record.selectedSubcategories);
+                
+                // 價格
+                html += createResultRow('起跳金額', record.minPrice);
+                html += createResultRow('最高金額', record.maxPrice);
+                
+                // 營業時間
+                html += createResultRow('營業日', record.businessDays);
+                html += createResultRow('營業時間', record.businessHours);
+                if (record.businessHoursSupplement) {
+                    html += createResultRow('營業時間補充', record.businessHoursSupplement);
+                }
+                
+                // 公休日
+                if (record.closedDays) {
+                    html += createResultRow('公休日', record.closedDays);
+                }
+                if (record.closedDaysSupplement) {
+                    html += createResultRow('公休日補充', record.closedDaysSupplement);
+                }
+                
+                // 社群連結
+                if (record.websiteUrl) {
+                    html += createResultRow('官方網站', `<a href="${record.websiteUrl}" target="_blank">開啟連結</a>`);
+                }
+                if (record.facebookUrl) {
+                    html += createResultRow('Facebook', `<a href="${record.facebookUrl}" target="_blank">開啟連結</a>`);
+                }
+                if (record.lineUrl) {
+                    html += createResultRow('LINE', `<a href="${record.lineUrl}" target="_blank">開啟連結</a>`);
+                }
+                if (record.instagramUrl) {
+                    html += createResultRow('Instagram', `<a href="${record.instagramUrl}" target="_blank">開啟連結</a>`);
+                }
+                if (record.googleBusinessUrl) {
+                    html += createResultRow('Google商家', `<a href="${record.googleBusinessUrl}" target="_blank">開啟連結</a>`);
+                }
+                if (record.linkNotes) {
+                    html += createResultRow('連結備註', record.linkNotes);
+                }
+                
+                // 商家介紹
+                if (record.storeIntroduction) {
+                    html += createResultRow('商家介紹', record.storeIntroduction);
+                }
+                
+                // 環境圖連結
+                if (record.envImageLinks) {
+                    html += createResultRow('環境圖', createImageLinks(record.envImageLinks));
+                }
+                
+                // 價目表連結
+                if (record.priceListLinks) {
+                    html += createResultRow('價目表', createImageLinks(record.priceListLinks));
+                }
+                
+                // 商品資料
+                if (record.products) {
+                    html += createResultRow('商品資料', `<pre style="white-space: pre-wrap; margin: 0;">${record.products}</pre>`);
+                }
+                
+                // 商品圖片連結
+                if (record.productImageLinks) {
+                    html += createResultRow('商品圖片', createImageLinks(record.productImageLinks));
+                }
+                
+                card.innerHTML = html;
+                resultsDiv.appendChild(card);
+            });
+            
+            resultsDiv.classList.add('show');
+        }
+
+        // 創建結果行
+        function createResultRow(label, value) {
+            if (!value) return '';
+            return `
+                <div class="result-row">
+                    <div class="result-label">${label}：</div>
+                    <div class="result-value">${value}</div>
+                </div>
+            `;
+        }
+
+        // 創建圖片連結
+        function createImageLinks(linksString) {
+            if (!linksString) return '';
+            
+            const links = linksString.split('\n').filter(link => link.trim());
+            if (links.length === 0) return '';
+            
+            return `
+                <div class="image-links">
+                    ${links.map((link, i) => `
+                        <a href="${link.trim()}" target="_blank" class="image-link">
+                            📷 圖片 ${i + 1}
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 查詢按鈕點擊事件
+        searchBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                showError('請輸入Email');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showError('請輸入有效的Email格式');
+                return;
+            }
+            
+            // 顯示載入中
+            clearMessages();
+            loadingDiv.classList.add('show');
+            searchBtn.disabled = true;
+            
+            try {
+                // 發送查詢請求
+                const response = await fetch(`${scriptUrl}?action=query&email=${encodeURIComponent(email)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResults(result.data);
+                } else {
+                    showError(result.message || '查詢失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('查詢錯誤:', error);
+                showError('查詢時發生錯誤，請檢查網路連線或稍後再試');
+            } finally {
+                loadingDiv.classList.remove('show');
+                searchBtn.disabled = false;
+            }
+        });
+
+        // Enter 鍵查詢
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

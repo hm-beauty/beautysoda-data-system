@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家資料填寫 - 美日搜達</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: white;
+            padding: 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+        }
+        
+        .header img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .header h1,
+        .header p {
+            display: none;
+        }
+
+        .form-content {
+            padding: 30px;
+        }
+
+        .section-title {
+            background-color: #8fbc8f;
+            color: white;
+            padding: 12px 20px;
+            margin: 20px -30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .required {
+            color: #e74c3c;
+            margin-right: 3px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select {
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .category-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .category-btn {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+        }
+
+        .category-btn.active {
+            background-color: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .subcategory-container {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .subcategory-container.show {
+            display: block;
+        }
+
+        .product-section {
+            background-color: #fff8dc;
+            padding: 20px;
+            margin: 20px -30px;
+            border-left: 4px solid #ffa500;
+        }
+
+        .product-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .product-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .remove-product {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .remove-product:hover {
+            background-color: #c0392b;
+        }
+
+        .add-product-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .add-product-btn:hover {
+            background-color: #229954;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #fafafa;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background-color: #e8f0ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .submit-btn {
+            background-color: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            background-color: #5568d3;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message a {
+            color: #0056b3;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .section-title {
+                margin: 20px -20px;
+                font-size: 16px;
+            }
+
+            .product-section {
+                margin: 20px -20px;
+            }
+
+            .category-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .query-link-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .query-link-box strong {
+            color: #856404;
+        }
+        
+        .disclaimer-box {
+            background-color: #fff9e6;
+            border: 2px solid #ffa500;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .disclaimer-box h3 {
+            color: #d9534f;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .disclaimer-box h3::before {
+            content: '⚠️';
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .disclaimer-content {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            line-height: 1.8;
+        }
+        
+        .disclaimer-content ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .disclaimer-content li {
+            margin-bottom: 12px;
+        }
+        
+        .disclaimer-options {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .disclaimer-options label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .disclaimer-options input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .disclaimer-options label.agree {
+            color: #27ae60;
+        }
+        
+        .disclaimer-options label.disagree {
+            color: #e74c3c;
+        }
+        
+        .disclaimer-warning {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+            font-weight: 600;
+        }
+        
+        .disclaimer-warning.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="data:image/png;base64,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" alt="美日搜達 Beauty Soda - 商家資料填寫表單">
+            <h1>🌸 商家資料填寫表單</h1>
+            <p>美日搜達 Beauty Soda - 商家資料登錄系統</p>
+        </div>
+
+        <div class="form-content">
+            <div class="info-box">
+                <strong>📋 填寫說明：<a href="https://your-website.com/example" target="_blank" style="color: #667eea; text-decoration: underline; margin-left: 10px;">👉 點我看範例</a></strong>
+                <ul>
+                    <li>標示 <span class="required">*</span> 為必填欄位</li>
+                    <li>請確實填寫聯絡Email，以便後續查詢您的提交記錄</li>
+                    <li>提交後，您可以隨時用Email查詢您填寫的資料</li>
+                    <li>商品資訊可點擊「➕ 新增商品項目」動態增加</li>
+                    <li>每張圖片不得超過 <strong>1MB</strong></li>
+                    <li>每個商品上傳 <strong>1張</strong> 圖片</li>
+                </ul>
+            </div>
+
+            <!-- 免責聲明 -->
+            <div class="disclaimer-box">
+                <h3>免責聲明</h3>
+                
+                <div class="disclaimer-content">
+                    <p><strong>美業相關的服務皆到符合政府法規管理與規範，為維持刊登品質與雙方權益，以確保刊登資料與文案合規，請閱讀以下聲明後，勾選是否同意：</strong></p>
+                    
+                    <ol>
+                        <li>店家對於本平台(美日搜達)，由店家負責提供相關文字與圖片素材，需自行確認相關文字與圖片素材，無侵犯第三方相關法規或其他法律之情事。</li>
+                        
+                        <li>店家刊登期間，須確保提供給本平台(美日搜達)之文字與圖片素材，為該店家合法取得版權所有，無任何侵害第三人權利之情事，並於刊登期間授權本平台(美日搜達)於站內推廣使用。</li>
+                        
+                        <li>相關刊登規範，須遵守本平台含義，本平台保有最終刊登、修改與下架之權利。</li>
+                    </ol>
+                    
+                    <p style="margin-top: 15px;"><strong>若您已詳閱關讀或已經刊登資訊，即表示您已同意以上聲明。</strong></p>
+                </div>
+                
+                <div class="disclaimer-options">
+                    <label class="agree">
+                        <input type="radio" name="disclaimer" value="agree" id="disclaimerAgree" onchange="handleDisclaimerChange()">
+                        ✓ 我同意
+                    </label>
+                    
+                    <label class="disagree">
+                        <input type="radio" name="disclaimer" value="disagree" id="disclaimerDisagree" onchange="handleDisclaimerChange()">
+                        ✗ 我不同意
+                    </label>
+                </div>
+                
+                <div class="disclaimer-warning" id="disclaimerWarning">
+                    ⚠️ <strong>因為您不同意此免責聲明，您將無法在本網站刊登，造成您的不便敬請見諒。</strong>
+                </div>
+            </div>
+
+            <form id="merchantForm">
+                <!-- 基本資料填寫 -->
+                <div class="section-title">基本資料填寫</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><span class="required">*</span>店家名稱</label>
+                        <input type="text" name="storeName" required placeholder="請輸入店家名稱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>分店名稱</label>
+                        <input type="text" name="branchName" placeholder="例如：信義店、東區店（選填）">
+                        <div class="help-text">💡 如有多間分店，請填寫分店名稱以便區分</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><span class="required">*</span>聯絡人</label>
+                        <input type="text" name="contactPerson" required placeholder="請輸入聯絡人姓名">
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="required">*</span>聯絡人電子信箱</label>
+                        <input type="email" name="contactEmail" required placeholder="example@email.com">
+                        <div class="help-text">💡 此Email將作為查詢您提交記錄的憑證，請務必填寫正確</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label><span class="required">*</span>店家地址</label>
+                        <input type="text" name="storeAddress" required placeholder="請輸入完整地址">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><span class="required">*</span>聯絡人電話 (含區碼)</label>
+                        <input type="tel" name="contactPhone" required placeholder="例：02-12345678 或 0912-345678">
+                    </div>
+
+                    <div class="form-group">
+                        <label>地址補充</label>
+                        <input type="text" name="addressSupplement" placeholder="例：3樓、B1等">
+                    </div>
+                </div>
+
+                <!-- 店家類型 -->
+                <div class="form-group">
+                    <label><span class="required">*</span>店家類型（可複選，至少選一項）</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="美甲" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            美甲
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="美睫/霧眉/繡眉/眼線" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            美睫/霧眉/繡眉/眼線
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="美髮" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            美髮
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="美容/美體" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            美容/美體
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="SPA按摩" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            SPA按摩
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 2px solid #dee2e6;">
+                            <input type="checkbox" name="storeTypes" value="女性健身" style="width: auto; margin-right: 8px;" onchange="updateServiceCategories()">
+                            女性健身
+                        </label>
+                    </div>
+                    <div class="help-text">💡 請至少選擇一種店家類型</div>
+                </div>
+
+                <!-- 店家服務 -->
+                <div class="form-group">
+                    <label><span class="required">*</span>店家服務</label>
+                    <div class="help-text">請先選擇店家類型，服務項目會根據您選擇的類型顯示</div>
+                    <div id="subcategoryContainer" class="subcategory-container"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><span class="required">*</span>服務起跳金額</label>
+                        <input type="number" name="minPrice" required placeholder="例：500">
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="required">*</span>最高消費金額</label>
+                        <input type="number" name="maxPrice" required placeholder="例：3000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label><span class="required">*</span>營業星期（可複選）</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期一" style="width: auto; margin-right: 8px;">
+                                星期一
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期二" style="width: auto; margin-right: 8px;">
+                                星期二
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期三" style="width: auto; margin-right: 8px;">
+                                星期三
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期四" style="width: auto; margin-right: 8px;">
+                                星期四
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期五" style="width: auto; margin-right: 8px;">
+                                星期五
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期六" style="width: auto; margin-right: 8px;">
+                                星期六
+                            </label>
+                            <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                                <input type="checkbox" name="businessDays" value="星期日" style="width: auto; margin-right: 8px;">
+                                星期日
+                            </label>
+                        </div>
+                        <div class="help-text">💡 請選擇所有營業的日期</div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><span class="required">*</span>營業時間</label>
+                        <input type="text" name="businessHours" required placeholder="例：09:00-21:00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>營業時間補充</label>
+                    <textarea name="businessHoursSupplement" rows="2" placeholder="例：週末營業時間不同、特殊休息日等"></textarea>
+                </div>
+
+                <!-- 公休時間 -->
+                <div class="form-group">
+                    <label>公休時間（可複選）</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期一" style="width: auto; margin-right: 8px;">
+                            星期一
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期二" style="width: auto; margin-right: 8px;">
+                            星期二
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期三" style="width: auto; margin-right: 8px;">
+                            星期三
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期四" style="width: auto; margin-right: 8px;">
+                            星期四
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期五" style="width: auto; margin-right: 8px;">
+                            星期五
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期六" style="width: auto; margin-right: 8px;">
+                            星期六
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="星期日" style="width: auto; margin-right: 8px;">
+                            星期日
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="國定假日" style="width: auto; margin-right: 8px;">
+                            國定假日
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #fff3cd; border-radius: 4px; cursor: pointer; border: 1px solid #ffc107;">
+                            <input type="checkbox" name="closedDays" value="固定公休日" id="fixedClosedDay" style="width: auto; margin-right: 8px;" onchange="toggleFixedClosedDayInput()">
+                            固定公休日
+                        </label>
+                    </div>
+                    <div class="help-text">💡 請選擇所有公休的日期（可不選）</div>
+                    
+                    <div id="fixedClosedDayInputContainer" style="display: none; margin-top: 15px;">
+                        <label>固定公休日期</label>
+                        <input type="text" name="fixedClosedDayDetail" id="fixedClosedDayDetail" placeholder="請輸入數字，例如：每月1號、15號">
+                        <div class="help-text">例如：每月1號和15號、每月第一個星期一等</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>公休時間補充</label>
+                    <textarea name="closedDaysSupplement" rows="2" placeholder="如果有特殊情況請補充，例如：隔週星期二休息、農曆新年休息等"></textarea>
+                    <div class="help-text">💡 如果有特殊項目請在此補充說明</div>
+                </div>
+
+                <!-- 連結資料填寫 -->
+                <div class="section-title">連結資料填寫 (有再填寫)</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>官網連結</label>
+                        <input type="text" name="websiteUrl" placeholder="https://">
+                    </div>
+
+                    <div class="form-group">
+                        <label>FB連結</label>
+                        <input type="text" name="facebookUrl" placeholder="https://facebook.com/">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>LINE連結</label>
+                        <input type="text" name="lineUrl" placeholder="https://line.me/">
+                    </div>
+
+                    <div class="form-group">
+                        <label>IG連結</label>
+                        <input type="text" name="instagramUrl" placeholder="https://instagram.com/">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Google商家連結</label>
+                    <input type="text" name="googleBusinessUrl" placeholder="https://maps.google.com/">
+                </div>
+
+                <div class="form-group">
+                    <label>相關連結備註 (有再填寫)</label>
+                    <textarea name="linkNotes" rows="2" placeholder="其他相關連結或說明"></textarea>
+                </div>
+
+                <!-- 店家資料填寫&上傳 -->
+                <div class="section-title">店家資料填寫&上傳</div>
+
+                <div class="form-group">
+                    <label><span class="required">*</span>商家介紹（限500字內）</label>
+                    <textarea 
+                        name="storeIntroduction" 
+                        id="storeIntroduction" 
+                        rows="6" 
+                        required 
+                        maxlength="500" 
+                        placeholder="請輸入您的商家介紹、特色、理念等..."
+                        oninput="updateCharCount()"
+                    ></textarea>
+                    <div class="help-text">
+                        <span id="charCount">0</span> / 500 字
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><span class="required">*</span>商家環境圖（5-10張，每張不得超過1MB）</label>
+                    <div class="file-upload-area" 
+                         onclick="document.getElementById('envImages').click()" 
+                         ondragover="handleEnvDragOver(event)" 
+                         ondrop="handleEnvDrop(event)">
+                        <p>📷 點擊或拖曳圖片至此上傳</p>
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">支援 JPG、PNG 格式，每張最大 1MB，需上傳 5-10 張</p>
+                    </div>
+                    <input type="file" 
+                           id="envImages" 
+                           class="file-input" 
+                           accept="image/jpeg,image/png,image/jpg" 
+                           multiple 
+                           onchange="handleEnvFileSelect(event)">
+                    <div id="envPreview" class="preview-container"></div>
+                    <div class="help-text" id="envImageCount">已上傳 0 張（需要 5-10 張）</div>
+                </div>
+
+                <div class="form-group">
+                    <label>價目表上傳（選填，最多10張，每張不得超過1MB）</label>
+                    <div class="file-upload-area" 
+                         onclick="document.getElementById('priceListImages').click()" 
+                         ondragover="handlePriceListDragOver(event)" 
+                         ondrop="handlePriceListDrop(event)">
+                        <p>📷 點擊或拖曳圖片至此上傳</p>
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">支援 JPG、PNG 格式，每張最大 1MB，最多 10 張</p>
+                    </div>
+                    <input type="file" 
+                           id="priceListImages" 
+                           class="file-input" 
+                           accept="image/jpeg,image/png,image/jpg" 
+                           multiple 
+                           onchange="handlePriceListFileSelect(event)">
+                    <div id="priceListPreview" class="preview-container"></div>
+                    <div class="help-text" id="priceListCount">已上傳 0 張（最多10張）</div>
+                </div>
+
+                <!-- 商品資料填寫 -->
+                <div class="product-section">
+                    <h3 style="margin-bottom: 15px;">📦 商品/服務項目填寫 (至少填寫 1 項，最多 10 項)</h3>
+                    
+                    <div id="productsContainer">
+                        <!-- 商品項目會動態生成在這裡 -->
+                    </div>
+
+                    <button type="button" class="add-product-btn" id="addProductBtn">
+                        ➕ 新增商品項目
+                    </button>
+                </div>
+
+                <!-- 提交按鈕 -->
+                <div class="success-message" id="successMessage">
+                    <h3>✅ 提交成功！</h3>
+                    <p>您的資料已成功送出。</p>
+                    <div class="query-link-box">
+                        <strong>🔍 查詢您的提交記錄：</strong><br>
+                        請前往 <a href="query.html" target="_blank">查詢頁面</a>，輸入您的Email即可查看您填寫的所有資料。
+                    </div>
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    <h3>❌ 提交失敗</h3>
+                    <p id="errorText"></p>
+                </div>
+
+                <div class="loading" id="loadingDiv">
+                    <div class="spinner"></div>
+                    <p>資料上傳中，請稍候...</p>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    📤 提交表單
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 免責聲明處理
+        function handleDisclaimerChange() {
+            const agreeRadio = document.getElementById('disclaimerAgree');
+            const disagreeRadio = document.getElementById('disclaimerDisagree');
+            const warningDiv = document.getElementById('disclaimerWarning');
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('merchantForm');
+            
+            if (disagreeRadio.checked) {
+                // 顯示警告
+                warningDiv.classList.add('show');
+                // 禁用表單
+                submitBtn.disabled = true;
+                submitBtn.style.background = '#ccc';
+                submitBtn.style.cursor = 'not-allowed';
+                
+                // 禁用所有表單輸入、按鈕和上傳區域
+                const inputs = form.querySelectorAll('input, select, textarea, button');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    input.style.opacity = '0.5';
+                    input.style.pointerEvents = 'none';
+                });
+                
+                // 禁用所有上傳區域
+                const uploadAreas = document.querySelectorAll('.file-upload-area');
+                uploadAreas.forEach(area => {
+                    area.style.opacity = '0.5';
+                    area.style.pointerEvents = 'none';
+                    area.style.cursor = 'not-allowed';
+                });
+                
+                // 禁用分類選擇按鈕
+                const categoryBtns = document.querySelectorAll('.category-btn, .subcategory-btn');
+                categoryBtns.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.pointerEvents = 'none';
+                    btn.style.cursor = 'not-allowed';
+                });
+                
+            } else if (agreeRadio.checked) {
+                // 隱藏警告
+                warningDiv.classList.remove('show');
+                // 啟用表單
+                submitBtn.disabled = false;
+                submitBtn.style.background = '';
+                submitBtn.style.cursor = '';
+                
+                // 啟用所有表單輸入、按鈕和上傳區域
+                const inputs = form.querySelectorAll('input, select, textarea, button');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.style.pointerEvents = '';
+                });
+                
+                // 啟用所有上傳區域
+                const uploadAreas = document.querySelectorAll('.file-upload-area');
+                uploadAreas.forEach(area => {
+                    area.style.opacity = '1';
+                    area.style.pointerEvents = '';
+                    area.style.cursor = 'pointer';
+                });
+                
+                // 啟用分類選擇按鈕
+                const categoryBtns = document.querySelectorAll('.category-btn, .subcategory-btn');
+                categoryBtns.forEach(btn => {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = '';
+                    btn.style.cursor = 'pointer';
+                });
+            }
+        }
+        
+        // 服務分類資料
+        const serviceCategories = {
+            '美甲': ['基礎保養', '凝膠保養', '凝膠指甲', '造型裝飾', '完全卸除', '延長指甲', '其他項目'],
+            '美睫/霧眉/繡眉/眼線': ['接上睫毛', '接下睫毛', '卸睫毛', '回補睫毛', '霧眉', '繡眉', '眼線', '其他項目'],
+            '美髮': ['洗髮', '剪髮', '護髮', '燙髮', '染髮', '接髮', '頭皮護理', '其他項目'],
+            '美容/美體': ['基礎保養', '深層保養', '肌膚補水', '緊緻塑活', '淨白亮采', '倍冠刷別', '保濕補水', '其他項目'],
+            'SPA按摩': ['頭部舒緩', '身體舒緩', '孕婦舒緩', '產後泌乳', '岩盤浴', '其他項目'],
+            '女性健身': ['私人教練', '肌力訓練', '空中瑜珈', '有氧運動', '飛輪課程', '其他項目']
+        };
+
+        let productCount = 0;
+        const MAX_PRODUCTS = 10;
+        let selectedCategories = [];
+        let selectedSubcategories = {};
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addProduct();
+            
+            // 初始禁用表單，直到同意免責聲明
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('merchantForm');
+            
+            submitBtn.disabled = true;
+            submitBtn.style.background = '#ccc';
+            submitBtn.style.cursor = 'not-allowed';
+            
+            // 禁用所有輸入和按鈕
+            const inputs = form.querySelectorAll('input, select, textarea, button');
+            inputs.forEach(input => {
+                input.disabled = true;
+                input.style.opacity = '0.5';
+                input.style.pointerEvents = 'none';
+            });
+            
+            // 禁用所有上傳區域
+            const uploadAreas = document.querySelectorAll('.file-upload-area');
+            uploadAreas.forEach(area => {
+                area.style.opacity = '0.5';
+                area.style.pointerEvents = 'none';
+                area.style.cursor = 'not-allowed';
+            });
+        });
+
+        // 固定公休日輸入框顯示/隱藏
+        function toggleFixedClosedDayInput() {
+            const checkbox = document.getElementById('fixedClosedDay');
+            const container = document.getElementById('fixedClosedDayInputContainer');
+            const input = document.getElementById('fixedClosedDayDetail');
+            
+            if (checkbox.checked) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+                input.value = ''; // 清空輸入
+            }
+        }
+
+        // 更新服務分類（根據店家類型）
+        function updateServiceCategories() {
+            // 取得所有選中的店家類型
+            const selectedTypes = Array.from(
+                document.querySelectorAll('input[name="storeTypes"]:checked')
+            ).map(cb => cb.value);
+            
+            const container = document.getElementById('subcategoryContainer');
+            
+            if (selectedTypes.length === 0) {
+                container.innerHTML = '<div class="help-text" style="color: #999;">請先選擇店家類型</div>';
+                container.classList.remove('show');
+                selectedSubcategories = {};
+                return;
+            }
+            
+            // 收集所有選中類型的子項目
+            let allSubcategories = {};
+            selectedTypes.forEach(type => {
+                if (serviceCategories[type]) {
+                    allSubcategories[type] = serviceCategories[type];
+                }
+            });
+            
+            // 生成 HTML
+            let html = '<div style="margin-top: 15px;">';
+            
+            Object.keys(allSubcategories).forEach(type => {
+                html += `
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <strong style="color: #667eea; font-size: 16px; display: block; margin-bottom: 10px;">
+                            ${type} - 服務項目
+                        </strong>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;">
+                `;
+                
+                allSubcategories[type].forEach(sub => {
+                    html += `
+                        <label style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 4px; cursor: pointer; border: 1px solid #dee2e6;">
+                            <input type="checkbox" class="subcategory-checkbox" data-category="${type}" value="${sub}" style="width: auto; margin-right: 5px;" onchange="updateSubcategorySelection()">
+                            <span style="font-size: 14px;">${sub}</span>
+                        </label>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            container.innerHTML = html;
+            container.classList.add('show');
+        }
+        
+        // 更新子類別選擇
+        function updateSubcategorySelection() {
+            selectedSubcategories = {};
+            
+            document.querySelectorAll('.subcategory-checkbox:checked').forEach(checkbox => {
+                const category = checkbox.dataset.category;
+                const value = checkbox.value;
+                
+                if (!selectedSubcategories[category]) {
+                    selectedSubcategories[category] = [];
+                }
+                selectedSubcategories[category].push(value);
+            });
+        }
+
+        function addProduct() {
+            if (productCount >= MAX_PRODUCTS) {
+                alert('最多只能新增 10 個商品項目！');
+                return;
+            }
+            
+            productCount++;
+            const container = document.getElementById('productsContainer');
+            
+            const productHTML = `
+                <div class="product-item" data-product-id="${productCount}">
+                    <div class="product-header">
+                        <span class="product-number">商品 #${productCount}</span>
+                        ${productCount > 1 ? '<button type="button" class="remove-product" onclick="removeProduct(this)">🗑️ 刪除</button>' : ''}
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><span class="required">*</span>商品名稱</label>
+                            <input type="text" name="productName_${productCount}" required placeholder="例：基礎美甲保養">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><span class="required">*</span>商品價格</label>
+                            <input type="number" name="productPrice_${productCount}" required placeholder="例：500">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>商品描述</label>
+                        <textarea name="productDesc_${productCount}" rows="3" placeholder="請描述商品/服務內容、特色等"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span class="required">*</span>商品圖片（1張，不得超過1MB）</label>
+                        <div class="file-upload-area" onclick="document.getElementById('fileInput_${productCount}').click()" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, ${productCount})">
+                            <p>📷 點擊或拖曳圖片至此上傳</p>
+                            <p style="font-size: 12px; color: #666; margin-top: 5px;">支援 JPG、PNG 格式，最大 1MB，只能上傳 1 張</p>
+                        </div>
+                        <input type="file" id="fileInput_${productCount}" class="file-input" 
+                               accept="image/jpeg,image/png,image/jpg" 
+                               onchange="handleFileSelect(event, ${productCount})">
+                        <div id="preview_${productCount}" class="preview-container"></div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', productHTML);
+            
+            if (productCount >= MAX_PRODUCTS) {
+                document.getElementById('addProductBtn').disabled = true;
+                document.getElementById('addProductBtn').textContent = '已達商品數量上限 (10項)';
+            }
+        }
+
+        function removeProduct(button) {
+            const productItem = button.closest('.product-item');
+            const productId = productItem.dataset.productId;
+            delete productFiles[productId];
+            productItem.remove();
+            productCount--;
+            
+            document.querySelectorAll('.product-item').forEach((item, index) => {
+                item.querySelector('.product-number').textContent = `商品 #${index + 1}`;
+            });
+            
+            const addBtn = document.getElementById('addProductBtn');
+            addBtn.disabled = false;
+            addBtn.textContent = '➕ 新增商品項目';
+        }
+
+        document.getElementById('addProductBtn').addEventListener('click', addProduct);
+
+        // ===== 商家介紹字數統計 =====
+        function updateCharCount() {
+            const textarea = document.getElementById('storeIntroduction');
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = textarea.value.length;
+            
+            if (textarea.value.length > 500) {
+                alert('商家介紹不得超過500字！');
+                textarea.value = textarea.value.substring(0, 500);
+                charCount.textContent = 500;
+            }
+        }
+
+        // ===== 環境圖片處理 =====
+        let envFiles = [];
+        
+        function handleEnvDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+        
+        function handleEnvDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleEnvFiles(files);
+        }
+        
+        function handleEnvFileSelect(event) {
+            const files = Array.from(event.target.files);
+            handleEnvFiles(files);
+        }
+        
+        function handleEnvFiles(files) {
+            const remainingSlots = 10 - envFiles.length;
+            
+            if (remainingSlots <= 0) {
+                alert('環境圖最多只能上傳 10 張！');
+                return;
+            }
+            
+            const filesToAdd = files.slice(0, remainingSlots);
+            
+            filesToAdd.forEach(file => {
+                if (file.size > 1 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 1MB，已跳過`);
+                    return;
+                }
+                
+                envFiles.push(file);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addEnvPreview(e.target.result, file.name, envFiles.length - 1);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            updateEnvImageCount();
+        }
+        
+        function addEnvPreview(src, filename, fileIndex) {
+            const container = document.getElementById('envPreview');
+            const previewHTML = `
+                <div class="preview-item" data-file-index="${fileIndex}">
+                    <img src="${src}" alt="${filename}">
+                    <button type="button" class="preview-remove" onclick="removeEnvPreview(${fileIndex})">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', previewHTML);
+        }
+        
+        function removeEnvPreview(fileIndex) {
+            envFiles.splice(fileIndex, 1);
+            renderEnvPreviews();
+            updateEnvImageCount();
+        }
+        
+        function renderEnvPreviews() {
+            const container = document.getElementById('envPreview');
+            container.innerHTML = '';
+            
+            envFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addEnvPreview(e.target.result, file.name, index);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function updateEnvImageCount() {
+            const countDiv = document.getElementById('envImageCount');
+            const count = envFiles.length;
+            
+            if (count < 5) {
+                countDiv.innerHTML = `<span style="color: #e74c3c;">已上傳 ${count} 張（需要 5-10 張）</span>`;
+            } else if (count >= 5 && count <= 10) {
+                countDiv.innerHTML = `<span style="color: #27ae60;">✅ 已上傳 ${count} 張</span>`;
+            }
+        }
+
+        // ===== 價目表圖片處理 =====
+        let priceListFiles = [];
+        
+        function handlePriceListDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+        
+        function handlePriceListDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = Array.from(event.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handlePriceListFiles(files);
+        }
+        
+        function handlePriceListFileSelect(event) {
+            const files = Array.from(event.target.files);
+            handlePriceListFiles(files);
+        }
+        
+        function handlePriceListFiles(files) {
+            const remainingSlots = 10 - priceListFiles.length;
+            
+            if (remainingSlots <= 0) {
+                alert('價目表最多只能上傳 10 張！');
+                return;
+            }
+            
+            const filesToAdd = files.slice(0, remainingSlots);
+            
+            filesToAdd.forEach(file => {
+                if (file.size > 1 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 1MB，已跳過`);
+                    return;
+                }
+                
+                priceListFiles.push(file);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addPriceListPreview(e.target.result, file.name, priceListFiles.length - 1);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            updatePriceListCount();
+        }
+        
+        function updatePriceListCount() {
+            const countDiv = document.getElementById('priceListCount');
+            const count = priceListFiles.length;
+            
+            if (count > 0) {
+                countDiv.innerHTML = `<span style="color: #27ae60;">已上傳 ${count} 張（最多10張）</span>`;
+            } else {
+                countDiv.innerHTML = `已上傳 0 張（最多10張）`;
+            }
+        }
+        
+        function addPriceListPreview(src, filename, fileIndex) {
+            const container = document.getElementById('priceListPreview');
+            const previewHTML = `
+                <div class="preview-item" data-file-index="${fileIndex}">
+                    <img src="${src}" alt="${filename}">
+                    <button type="button" class="preview-remove" onclick="removePriceListPreview(${fileIndex})">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', previewHTML);
+        }
+        
+        function removePriceListPreview(fileIndex) {
+            priceListFiles.splice(fileIndex, 1);
+            renderPriceListPreviews();
+            updatePriceListCount();
+        }
+        
+        function renderPriceListPreviews() {
+            const container = document.getElementById('priceListPreview');
+            container.innerHTML = '';
+            
+            priceListFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addPriceListPreview(e.target.result, file.name, index);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ===== 商品圖片處理 =====
+        let productFiles = {};
+
+        function handleFileSelect(event, productId) {
+            const files = Array.from(event.target.files);
+            handleFiles(files, productId);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDrop(event, productId) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files).filter(file => 
+                file.type.startsWith('image/')
+            );
+            handleFiles(files, productId);
+        }
+
+        function handleFiles(files, productId) {
+            if (!productFiles[productId]) {
+                productFiles[productId] = [];
+            }
+            
+            // 商品圖片只能1張
+            if (productFiles[productId].length >= 1) {
+                alert('每個商品只能上傳 1 張圖片！請先刪除現有圖片再上傳新的。');
+                return;
+            }
+            
+            const file = files[0]; // 只取第一張
+            
+            if (!file) return;
+            
+            // 檢查大小：1MB = 1024 * 1024 bytes
+            if (file.size > 1 * 1024 * 1024) {
+                alert(`檔案 ${file.name} 超過 1MB，無法上傳！`);
+                return;
+            }
+            
+            productFiles[productId].push(file);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addPreview(e.target.result, file.name, productId, productFiles[productId].length - 1);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addPreview(src, filename, productId, fileIndex) {
+            const container = document.getElementById(`preview_${productId}`);
+            const previewHTML = `
+                <div class="preview-item" data-file-index="${fileIndex}">
+                    <img src="${src}" alt="${filename}">
+                    <button type="button" class="preview-remove" onclick="removePreview(${productId}, ${fileIndex})">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', previewHTML);
+        }
+
+        function removePreview(productId, fileIndex) {
+            productFiles[productId].splice(fileIndex, 1);
+            renderPreviews(productId);
+        }
+
+        function renderPreviews(productId) {
+            const container = document.getElementById(`preview_${productId}`);
+            container.innerHTML = '';
+            
+            productFiles[productId].forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addPreview(e.target.result, file.name, productId, index);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        document.getElementById('merchantForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 驗證免責聲明
+            const disclaimerAgree = document.getElementById('disclaimerAgree');
+            if (!disclaimerAgree.checked) {
+                alert('請先閱讀並同意免責聲明！');
+                return;
+            }
+            
+            // 驗證店家類型（至少選一項）
+            const storeTypesChecked = document.querySelectorAll('input[name="storeTypes"]:checked');
+            if (storeTypesChecked.length === 0) {
+                alert('請至少選擇一種店家類型！');
+                return;
+            }
+            
+            // 驗證服務項目
+            const hasSubcategories = Object.keys(selectedSubcategories).length > 0 && 
+                                    Object.values(selectedSubcategories).some(arr => arr.length > 0);
+            if (!hasSubcategories) {
+                alert('請至少選擇一個服務項目！');
+                return;
+            }
+            
+            // 驗證營業星期
+            const businessDaysChecked = document.querySelectorAll('input[name="businessDays"]:checked');
+            if (businessDaysChecked.length === 0) {
+                alert('請至少選擇一個營業日！');
+                return;
+            }
+            
+            // 驗證價格範圍
+            const minPriceInput = document.querySelector('input[name="minPrice"]');
+            const maxPriceInput = document.querySelector('input[name="maxPrice"]');
+            const minPrice = parseInt(minPriceInput.value);
+            const maxPrice = parseInt(maxPriceInput.value);
+            if (minPrice >= maxPrice) {
+                alert('服務起跳金額必須小於最高消費金額！');
+                return;
+            }
+            
+            // 驗證環境圖
+            if (envFiles.length < 5 || envFiles.length > 10) {
+                alert('商家環境圖需要上傳 5-10 張！目前已上傳 ' + envFiles.length + ' 張');
+                return;
+            }
+            
+            if (productCount === 0) {
+                alert('請至少填寫一個商品項目！');
+                return;
+            }
+            
+            document.getElementById('loadingDiv').classList.add('show');
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('successMessage').classList.remove('show');
+            document.getElementById('errorMessage').classList.remove('show');
+            
+            try {
+                const formData = new FormData(this);
+                
+                // 收集店家類型
+                const selectedStoreTypes = Array.from(storeTypesChecked).map(cb => cb.value);
+                formData.set('storeTypes', selectedStoreTypes.join(', '));
+                
+                // 收集營業星期
+                const selectedDays = Array.from(businessDaysChecked).map(cb => cb.value);
+                formData.set('businessDays', selectedDays.join(', '));
+                
+                // 收集公休時間
+                const closedDaysChecked = document.querySelectorAll('input[name="closedDays"]:checked');
+                const selectedClosedDays = Array.from(closedDaysChecked).map(cb => cb.value);
+                
+                // 如果勾選了固定公休日，加上詳細資訊
+                const fixedClosedDayDetail = document.getElementById('fixedClosedDayDetail').value;
+                if (selectedClosedDays.includes('固定公休日') && fixedClosedDayDetail) {
+                    const index = selectedClosedDays.indexOf('固定公休日');
+                    selectedClosedDays[index] = `固定公休日(${fixedClosedDayDetail})`;
+                }
+                
+                formData.set('closedDays', selectedClosedDays.length > 0 ? selectedClosedDays.join(', ') : '無');
+                
+                // 設置服務分類和項目
+                const categoryData = Object.keys(selectedSubcategories).map(cat => {
+                    return `${cat}: ${selectedSubcategories[cat].join(', ')}`;
+                }).join(' | ');
+                
+                formData.append('selectedCategory', Object.keys(selectedSubcategories).join(', '));
+                formData.append('selectedSubcategories', categoryData);
+                
+                // Debug: 檢查圖片數量
+                console.log('環境圖數量:', envFiles.length);
+                console.log('價目表數量:', priceListFiles.length);
+                console.log('商品圖:', productFiles);
+                
+                // 添加環境圖
+                for (let i = 0; i < envFiles.length; i++) {
+                    console.log(`正在處理環境圖 ${i + 1}/${envFiles.length}:`, envFiles[i].name);
+                    const base64 = await fileToBase64(envFiles[i]);
+                    console.log(`環境圖 ${i + 1} Base64 長度:`, base64.length);
+                    formData.append(`env_image_${i}`, base64);
+                }
+                
+                // 添加價目表
+                for (let i = 0; i < priceListFiles.length; i++) {
+                    console.log(`正在處理價目表 ${i + 1}/${priceListFiles.length}:`, priceListFiles[i].name);
+                    const base64 = await fileToBase64(priceListFiles[i]);
+                    console.log(`價目表 ${i + 1} Base64 長度:`, base64.length);
+                    formData.append(`pricelist_image_${i}`, base64);
+                }
+                
+                // 添加商品圖片
+                for (let productId in productFiles) {
+                    const files = productFiles[productId];
+                    for (let i = 0; i < files.length; i++) {
+                        console.log(`正在處理商品${productId}圖片 ${i + 1}:`, files[i].name);
+                        const base64 = await fileToBase64(files[i]);
+                        console.log(`商品${productId}圖片 ${i + 1} Base64 長度:`, base64.length);
+                        formData.append(`product_${productId}_image_${i}`, base64);
+                    }
+                }
+                
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                const urlEncodedData = new URLSearchParams(data).toString();
+                
+                const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+                
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: urlEncodedData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('successMessage').classList.add('show');
+                    document.getElementById('merchantForm').reset();
+                    
+                    // 重置所有圖片
+                    productFiles = {};
+                    envFiles = [];
+                    priceListFiles = [];
+                    
+                    productCount = 0;
+                    document.getElementById('productsContainer').innerHTML = '';
+                    document.getElementById('envPreview').innerHTML = '';
+                    document.getElementById('priceListPreview').innerHTML = '';
+                    document.getElementById('charCount').textContent = '0';
+                    updateEnvImageCount();
+                    
+                    addProduct();
+                    selectedCategory = '';
+                    selectedSubcategories = [];
+                    document.getElementById('subcategoryContainer').classList.remove('show');
+                    document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                    
+                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error(result.message || '提交失敗');
+                }
+            } catch (error) {
+                console.error('提交錯誤:', error);
+                document.getElementById('errorMessage').classList.add('show');
+                document.getElementById('errorText').textContent = error.message || '發生未知錯誤，請稍後再試';
+            } finally {
+                document.getElementById('loadingDiv').classList.remove('show');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>
