@@ -363,6 +363,20 @@
         .error-message.show {
             display: block;
         }
+        
+        .error-message h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .error-message p {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
 
         @media (max-width: 768px) {
             body {
@@ -886,7 +900,7 @@
                     <p>您的資料已成功送出。</p>
                     <div class="query-link-box">
                         <strong>🔍 查詢您的提交記錄：</strong><br>
-                        請前往 <a href="merchant-query" target="_blank">查詢頁面</a>，輸入您的Email即可查看您填寫的所有資料。
+                        請前往 <a href="merchant-query.html" target="_blank">查詢頁面</a>，輸入您的Email即可查看您填寫的所有資料。
                     </div>
                 </div>
 
@@ -1587,17 +1601,37 @@
                     data[key] = value;
                 }
                 
-                const urlEncodedData = new URLSearchParams(data).toString();
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbwe1vAzljq4NGk0puOspg6VslX70fwpljD0_WP-XeYmdDwZ9omjZ_YLqHPAHQHPzO9Y3g/exec
+';
                 
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbwe1vAzljq4NGk0puOspg6VslX70fwpljD0_WP-XeYmdDwZ9omjZ_YLqHPAHQHPzO9Y3g/exec';
+                console.log('準備發送請求到:', scriptUrl);
+                console.log('資料欄位數量:', Object.keys(data).length);
+                
+                // 增加超時控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超時
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: urlEncodedData
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                }).catch(error => {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        throw new Error('請求超時 - 上傳的資料可能太大，請減少圖片數量或壓縮圖片');
+                    }
+                    throw error;
                 });
+                
+                clearTimeout(timeoutId);
+                console.log('收到回應，狀態碼:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`伺服器回應錯誤 (${response.status}): ${response.statusText}`);
+                }
                 
                 const result = await response.json();
                 
@@ -1629,8 +1663,42 @@
                 }
             } catch (error) {
                 console.error('提交錯誤:', error);
+                
+                // 構建詳細的錯誤訊息
+                let errorMessage = '';
+                
+                if (error.message === 'Failed to fetch') {
+                    errorMessage = '❌ 無法連接到伺服器\n\n';
+                    errorMessage += '可能的原因：\n';
+                    errorMessage += '1. 網路連線問題 - 請檢查您的網路連線\n';
+                    errorMessage += '2. API 網址設定錯誤 - 請確認 Apps Script 的部署網址是否正確\n';
+                    errorMessage += '3. CORS 問題 - 請確認 Apps Script 已正確部署為「所有人」可存取\n';
+                    errorMessage += '4. 瀏覽器封鎖 - 請檢查是否有擴充功能封鎖請求\n\n';
+                    errorMessage += '請檢查瀏覽器的 Console (F12) 查看詳細錯誤訊息。';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = '⏱️ 請求逾時\n\n';
+                    errorMessage += '上傳的資料可能太大或網路速度太慢。\n';
+                    errorMessage += '建議：\n';
+                    errorMessage += '• 減少上傳的圖片數量\n';
+                    errorMessage += '• 壓縮圖片後再上傳\n';
+                    errorMessage += '• 確保圖片大小在 1MB 以下';
+                } else if (error.message.includes('undefined')) {
+                    errorMessage = '⚙️ 後端處理錯誤\n\n';
+                    errorMessage += '伺服器無法正確處理您的請求。\n\n';
+                    errorMessage += '可能的原因：\n';
+                    errorMessage += '• Apps Script 程式碼有錯誤\n';
+                    errorMessage += '• Google Sheets ID 或 Drive 資料夾 ID 設定錯誤\n';
+                    errorMessage += '• 權限不足\n\n';
+                    errorMessage += '詳細錯誤：' + error.message;
+                } else {
+                    errorMessage = '❌ 提交失敗\n\n';
+                    errorMessage += '錯誤訊息：' + error.message + '\n\n';
+                    errorMessage += '請截圖此錯誤訊息並聯絡管理員。';
+                }
+                
                 document.getElementById('errorMessage').classList.add('show');
-                document.getElementById('errorText').textContent = error.message || '發生未知錯誤，請稍後再試';
+                document.getElementById('errorText').textContent = errorMessage;
+                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
             } finally {
                 document.getElementById('loadingDiv').classList.remove('show');
                 document.getElementById('submitBtn').disabled = false;
