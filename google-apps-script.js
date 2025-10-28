@@ -12,290 +12,240 @@ function doGet(e) {
       const email = e.parameter.email;
       return handleQuery(email);
     } else if (action === 'admin') {
+      const password = e.parameter.password;
+      if (password !== ADMIN_PASSWORD) {
+        return createJsonResponse({
+          success: false,
+          message: '密碼錯誤'
+        });
+      }
       return handleAdminQuery();
     } else {
-      return ContentService
-        .createTextOutput('API 正常運作中')
-        .setMimeType(ContentService.MimeType.TEXT);
+      return createJsonResponse({
+        success: true,
+        message: 'API 運作正常'
+      });
     }
   } catch (error) {
-    console.log('GET 錯誤: ' + error.toString());
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        message: error.toString() 
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    Logger.log('GET 錯誤: ' + error.toString());
+    return createJsonResponse({
+      success: false,
+      message: error.toString()
+    });
   }
 }
 
 function doPost(e) {
   try {
-    console.log('doPost 被呼叫');
+    Logger.log('=== doPost 開始 ===');
     
-    //看接收到什麼
-    let params;
-    let postData;
-    
-    // 嘗試解析 JSON
-    try {
-      if (e.postData && e.postData.contents) {
-        console.log('收到 POST data');
-        postData = JSON.parse(e.postData.contents);
-        params = postData;
-        console.log('JSON 解析成功');
-      } else if (e.parameter) {
-        console.log('使用 e.parameter');
-        params = e.parameter;
-      } else {
-        throw new Error('無法取得 POST 資料');
-      }
-    } catch (jsonError) {
-      console.log('JSON 解析失敗，嘗試使用 parameter');
-      params = e.parameter || {};
+    // 檢查是否有 POST 資料
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error('沒有收到 POST 資料');
     }
     
-    console.log('params 數量:', Object.keys(params).length);
+    // 解析 JSON 資料
+    const data = JSON.parse(e.postData.contents);
+    Logger.log('收到的欄位數量: ' + Object.keys(data).length);
     
-    // 提取檔案
-    const files = extractFilesFromParams(params);
-    console.log('提取的檔案:', JSON.stringify(Object.keys(files)));
+    // 處理表單提交
+    const result = processFormSubmission(data);
     
+    return createJsonResponse(result);
+    
+  } catch (error) {
+    Logger.log('POST 錯誤: ' + error.toString());
+    Logger.log('錯誤堆疊: ' + error.stack);
+    
+    return createJsonResponse({
+      success: false,
+      message: '伺服器處理錯誤: ' + error.toString()
+    });
+  }
+}
+
+// ===== 建立 JSON 回應（修正版）=====
+function createJsonResponse(data) {
+  const output = ContentService.createTextOutput(JSON.stringify(data));
+  output.setMimeType(ContentService.MimeType.JSON);
+  
+  // 使用 Apps Script 支援的方式設定 CORS
+  return output;
+}
+
+// ===== 處理表單提交 =====
+function processFormSubmission(data) {
+  try {
+    Logger.log('=== 開始處理表單 ===');
+    
+    // 1. 取得或創建 Sheet
     const sheet = getOrCreateSheet();
+    Logger.log('Sheet 準備完成');
     
-    // 創建主資料夾
-    const mainFolder = createMainFolder(params);
-    console.log('主資料夾創建成功: ' + mainFolder.getName());
+    // 2. 創建主資料夾
+    const timestamp = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMMdd_HHmmss');
+    const storeName = (data.storeName || '未命名店家').replace(/[<>:"/\\|?*]/g, '_');
+    const branchName = data.branchName ? `_${data.branchName.replace(/[<>:"/\\|?*]/g, '_')}` : '';
+    const mainFolderName = `${storeName}${branchName}_${timestamp}`;
     
-    // 處理環境圖和價目表
-    const envAndPriceData = processEnvAndPriceImages(files, params, mainFolder);
-    console.log('環境圖處理完成');
+    const parentFolder = DriveApp.getFolderById(FOLDER_ID);
+    const mainFolder = parentFolder.createFolder(mainFolderName);
+    Logger.log('主資料夾創建成功: ' + mainFolderName);
     
-    // 處理商品圖片
-    const productImageData = processImages(files, params, mainFolder);
-    console.log('商品圖片處理完成');
+    // 3. 處理環境圖
+    let envImageLinks = [];
+    const envFolder = mainFolder.createFolder('環境圖');
     
-    const rowData = prepareRowData(params, productImageData, envAndPriceData);
-    console.log('資料準備完成');
-    
-    sheet.appendRow(rowData);
-    console.log('資料寫入 Sheet 成功');
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: true, 
-        message: '資料已成功儲存',
-        folderName: mainFolder.getName()
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
-  } catch (error) {
-    console.error('POST 錯誤: ' + error.toString());
-    console.error('錯誤堆疊: ' + error.stack);
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        message: error.toString()
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// ===== 從 params 提取檔案 =====
-function extractFilesFromParams(params) {
-  const files = {};
-  
-  try {
-    console.log('開始提取檔案');
-    
-    for (let key in params) {
-      // 處理環境圖
+    for (let key in data) {
       if (key.startsWith('env_image_')) {
-        if (!files['env_images']) {
-          files['env_images'] = [];
-        }
-        
-        const base64Data = params[key];
-        if (base64Data && base64Data.length > 100) {  // 確保不是空字串
-          files['env_images'].push({
-            data: base64Data[0] || base64Data,  // 處理陣列或字串
-            index: key.replace('env_image_', '')
-          });
-          console.log(`環境圖 ${key} 已提取，長度: ${base64Data.length || base64Data[0].length}`);
+        try {
+          const file = uploadBase64Image(data[key], `環境圖_${key.replace('env_image_', '')}.jpg`, envFolder);
+          if (file) {
+            envImageLinks.push(file.getUrl());
+            Logger.log('環境圖上傳成功: ' + key);
+          }
+        } catch (imgError) {
+          Logger.log('環境圖上傳失敗 ' + key + ': ' + imgError.toString());
         }
       }
-      // 處理價目表
-      else if (key.startsWith('pricelist_image_')) {
-        if (!files['pricelist_images']) {
-          files['pricelist_images'] = [];
-        }
-        
-        const base64Data = params[key];
-        if (base64Data && base64Data.length > 100) {
-          files['pricelist_images'].push({
-            data: base64Data[0] || base64Data,
-            index: key.replace('pricelist_image_', '')
-          });
-          console.log(`價目表 ${key} 已提取`);
+    }
+    Logger.log('環境圖處理完成，共 ' + envImageLinks.length + ' 張');
+    
+    // 4. 處理價目表
+    let priceListLinks = [];
+    if (hasAnyKey(data, 'pricelist_image_')) {
+      const priceListFolder = mainFolder.createFolder('價目表');
+      
+      for (let key in data) {
+        if (key.startsWith('pricelist_image_')) {
+          try {
+            const file = uploadBase64Image(data[key], `價目表_${key.replace('pricelist_image_', '')}.jpg`, priceListFolder);
+            if (file) {
+              priceListLinks.push(file.getUrl());
+              Logger.log('價目表上傳成功: ' + key);
+            }
+          } catch (imgError) {
+            Logger.log('價目表上傳失敗 ' + key + ': ' + imgError.toString());
+          }
         }
       }
+    }
+    Logger.log('價目表處理完成，共 ' + priceListLinks.length + ' 張');
+    
+    // 5. 收集並處理商品資料
+    let productsData = [];
+    let productIds = new Set();
+    
+    // 找出所有商品 ID
+    for (let key in data) {
+      if (key.startsWith('productName_')) {
+        const productId = key.split('_')[1];
+        productIds.add(productId);
+      }
+    }
+    
+    Logger.log('找到商品數量: ' + productIds.size);
+    
+    // 處理每個商品
+    for (let productId of productIds) {
+      const productName = data[`productName_${productId}`];
+      if (!productName) continue;
+      
+      const productPrice = data[`productPrice_${productId}`] || '';
+      const productDesc = data[`productDesc_${productId}`] || '';
+      
       // 處理商品圖片
-      else if (key.startsWith('product_') && key.includes('_image_')) {
-        const matches = key.match(/product_(\d+)_image_(\d+)/);
-        if (matches) {
-          const productId = matches[1];
-          const imageIndex = matches[2];
-          
-          if (!files[productId]) {
-            files[productId] = [];
+      let productImageLink = '';
+      const imageKey = `product_${productId}_image_0`;
+      
+      if (data[imageKey]) {
+        try {
+          const productFolder = mainFolder.createFolder(`商品_${productName.replace(/[<>:"/\\|?*]/g, '_')}`);
+          const file = uploadBase64Image(data[imageKey], `${productName}_圖片.jpg`, productFolder);
+          if (file) {
+            productImageLink = file.getUrl();
+            Logger.log(`商品${productId}圖片上傳成功`);
           }
-          
-          const base64Data = params[key];
-          if (base64Data && base64Data.length > 100) {
-            files[productId].push({
-              data: base64Data[0] || base64Data,
-              index: imageIndex
-            });
-            console.log(`商品${productId}圖片${imageIndex} 已提取`);
-          }
+        } catch (imgError) {
+          Logger.log(`商品${productId}圖片上傳失敗: ` + imgError.toString());
         }
       }
-    }
-    
-    console.log('檔案提取完成，共 ' + Object.keys(files).length + ' 類');
-  } catch (error) {
-    console.error('提取檔案錯誤: ' + error.toString());
-  }
-  
-  return files;
-}
-
-// ===== 處理環境圖和價目表圖片 =====
-function processEnvAndPriceImages(files, params, mainFolder) {
-  const result = {
-    envImageLinks: [],
-    priceListLinks: []
-  };
-  
-  try {
-    // 處理環境圖
-    if (files['env_images'] && files['env_images'].length > 0) {
-      console.log('找到環境圖，數量: ' + files['env_images'].length);
       
-      const envFolder = mainFolder.createFolder('環境圖');
-      console.log('環境圖資料夾創建成功');
-      
-      files['env_images'].forEach((fileData, index) => {
-        try {
-          console.log(`處理第${index + 1}張環境圖`);
-          
-          const file = uploadBase64Image(
-            fileData.data,
-            `環境圖_${index + 1}.jpg`,
-            envFolder
-          );
-          
-          if (file) {
-            result.envImageLinks.push(file.getUrl());
-            console.log(`環境圖${index + 1} 上傳成功`);
-          }
-        } catch (error) {
-          console.error(`環境圖${index + 1} 上傳失敗: ` + error.toString());
-        }
+      productsData.push({
+        name: productName,
+        price: productPrice,
+        desc: productDesc,
+        image: productImageLink
       });
     }
     
-    // 處理價目表
-    if (files['pricelist_images'] && files['pricelist_images'].length > 0) {
-      console.log('找到價目表，數量: ' + files['pricelist_images'].length);
-      
-      const pricelistFolder = mainFolder.createFolder('價目表');
-      
-      files['pricelist_images'].forEach((fileData, index) => {
-        try {
-          console.log(`處理第${index + 1}張價目表`);
-          
-          const file = uploadBase64Image(
-            fileData.data,
-            `價目表_${index + 1}.jpg`,
-            pricelistFolder
-          );
-          
-          if (file) {
-            result.priceListLinks.push(file.getUrl());
-            console.log(`價目表${index + 1} 上傳成功`);
-          }
-        } catch (error) {
-          console.error(`價目表${index + 1} 上傳失敗: ` + error.toString());
-        }
-      });
-    }
-  } catch (error) {
-    console.error('處理環境圖/價目表錯誤: ' + error.toString());
-  }
-  
-  return result;
-}
-
-// ===== 處理商品圖片 =====
-function processImages(files, params, mainFolder) {
-  const imageLinks = {};
-  
-  try {
-    console.log('開始處理商品圖片');
+    Logger.log('商品處理完成，共 ' + productsData.length + ' 個');
     
-    for (let productId in files) {
-      // 跳過環境圖和價目表
-      if (productId === 'env_images' || productId === 'pricelist_images') {
-        continue;
-      }
-      
-      console.log('處理商品ID: ' + productId);
-      const productName = params[`productName_${productId}`] || `商品${productId}`;
-      
-      const productFolder = mainFolder.createFolder(`商品_${productName}`);
-      imageLinks[productId] = [];
-      
-      files[productId].forEach((fileData, index) => {
-        try {
-          console.log(`處理商品${productId}的第${index + 1}張圖片`);
-          
-          const file = uploadBase64Image(
-            fileData.data,
-            `${productName}_圖片${index + 1}.jpg`,
-            productFolder
-          );
-          
-          if (file) {
-            imageLinks[productId].push(file.getUrl());
-            console.log(`商品${productId}圖片${index + 1} 上傳成功`);
-          }
-        } catch (error) {
-          console.error(`商品${productId}圖片${index + 1} 上傳失敗: ` + error.toString());
-        }
-      });
-    }
+    // 6. 準備寫入 Sheet 的資料
+    const rowData = [
+      new Date(),                                    // 提交時間
+      data.storeTypes || '',                         // 店家類型
+      data.storeName || '',                          // 店家名稱
+      data.branchName || '',                         // 分店名稱
+      data.contactPerson || '',                      // 聯絡人
+      data.contactEmail || '',                       // 聯絡Email
+      data.contactPhone || '',                       // 聯絡電話
+      data.storeAddress || '',                       // 店家地址
+      data.addressSupplement || '',                  // 地址補充
+      data.selectedCategory || '',                   // 服務類別
+      data.selectedSubcategories || '',              // 服務項目
+      data.minPrice || '',                           // 起跳金額
+      data.maxPrice || '',                           // 最高金額
+      data.businessDays || '',                       // 營業日
+      data.businessHours || '',                      // 營業時間
+      data.businessHoursSupplement || '',            // 營業時間補充
+      data.closedDays || '',                         // 公休日
+      data.closedDaysSupplement || '',               // 公休日補充
+      data.websiteUrl || '',                         // 官方網站
+      data.facebookUrl || '',                        // Facebook
+      data.lineUrl || '',                            // LINE
+      data.instagramUrl || '',                       // Instagram
+      data.googleBusinessUrl || '',                  // Google商家
+      data.linkNotes || '',                          // 連結備註
+      data.storeIntroduction || '',                  // 商家介紹
+      envImageLinks.join('\n'),                      // 環境圖連結
+      priceListLinks.join('\n'),                     // 價目表連結
+      JSON.stringify(productsData, null, 2)          // 商品資料
+    ];
+    
+    // 7. 寫入 Sheet
+    sheet.appendRow(rowData);
+    Logger.log('=== 資料寫入完成 ===');
+    
+    return {
+      success: true,
+      message: '資料提交成功！',
+      folderName: mainFolderName
+    };
+    
   } catch (error) {
-    console.error('處理商品圖片錯誤: ' + error.toString());
+    Logger.log('處理錯誤: ' + error.toString());
+    Logger.log('錯誤堆疊: ' + error.stack);
+    return {
+      success: false,
+      message: '處理失敗: ' + error.toString()
+    };
   }
-  
-  return imageLinks;
 }
 
-// ===== 上傳 Base64 圖片到 Drive =====
+// ===== 輔助函數 =====
+
+// 上傳 Base64 圖片
 function uploadBase64Image(base64String, fileName, folder) {
   try {
     if (!base64String || base64String.length < 100) {
-      console.log('Base64 字串無效或太短');
       return null;
     }
-    
-    console.log('Base64 字串長度: ' + base64String.length);
     
     let mimeType = 'image/jpeg';
     let base64Data = base64String;
     
-    // 如果有 data URL prefix，移除它
+    // 移除 data URL prefix
     if (base64String.indexOf(',') > -1) {
       const parts = base64String.split(',');
       const mimeMatch = parts[0].match(/:(.*?);/);
@@ -303,46 +253,32 @@ function uploadBase64Image(base64String, fileName, folder) {
         mimeType = mimeMatch[1];
       }
       base64Data = parts[1];
-      console.log('提取 MIME 類型: ' + mimeType);
     }
     
-    // 解碼 Base64
-    console.log('開始解碼 Base64...');
+    // 解碼並上傳
     const decodedData = Utilities.base64Decode(base64Data);
-    console.log('解碼成功，數據大小: ' + decodedData.length + ' bytes');
-    
-    // 創建 Blob
     const blob = Utilities.newBlob(decodedData, mimeType, fileName);
-    console.log('Blob 創建成功');
-    
-    // 上傳到 Drive
-    console.log('開始上傳到 Drive...');
     const file = folder.createFile(blob);
-    console.log('上傳成功');
-    
-    // 設定分享權限
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    console.log('權限設定完成');
     
     return file;
   } catch (error) {
-    console.error('uploadBase64Image 錯誤: ' + error.toString());
-    console.error('錯誤堆疊: ' + error.stack);
+    Logger.log('圖片上傳錯誤: ' + error.toString());
     return null;
   }
 }
 
-// ===== 創建商家主資料夾 =====
-function createMainFolder(params) {
-  const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-  const storeName = (params.storeName || '未命名店家').replace(/[<>:"/\\|?*]/g, '_');
-  const branchName = params.branchName ? `_${params.branchName}` : '';
-  const timestamp = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMMdd_HHmmss');
-  const mainFolderName = `${storeName}${branchName}_${timestamp}`;
-  return folder.createFolder(mainFolderName);
+// 檢查是否有某個前綴的 key
+function hasAnyKey(obj, prefix) {
+  for (let key in obj) {
+    if (key.startsWith(prefix)) {
+      return true;
+    }
+  }
+  return false;
 }
 
-// ===== 取得或創建 Sheet =====
+// 取得或創建 Sheet
 function getOrCreateSheet() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   let sheet = ss.getSheetByName('商家資料');
@@ -355,7 +291,7 @@ function getOrCreateSheet() {
       '起跳金額', '最高金額', '營業日', '營業時間', '營業時間補充',
       '公休日', '公休日補充', '官方網站', 'Facebook', 'LINE', 'Instagram',
       'Google商家連結', '連結備註', '商家介紹', '環境圖連結', '價目表連結',
-      '商品資料', '商品圖片連結'
+      '商品資料'
     ];
     sheet.appendRow(headers);
     
@@ -364,76 +300,22 @@ function getOrCreateSheet() {
     headerRange.setFontWeight('bold');
     headerRange.setBackground('#4285f4');
     headerRange.setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
   }
   
   return sheet;
 }
 
-// ===== 準備寫入 Sheet 的資料 =====
-function prepareRowData(params, productImageData, envAndPriceData) {
-  const timestamp = new Date();
-  
-  // 處理商品資料
-  let productsText = '';
-  let productImagesText = '';
-  
-  for (let i = 1; i <= 20; i++) {
-    const productName = params[`productName_${i}`];
-    if (productName) {
-      const productPrice = params[`productPrice_${i}`] || '';
-      const productDesc = params[`productDescription_${i}`] || '';
-      
-      productsText += `【商品${i}】\n`;
-      productsText += `名稱: ${productName}\n`;
-      productsText += `價格: ${productPrice}\n`;
-      productsText += `描述: ${productDesc}\n\n`;
-      
-      if (productImageData[i] && productImageData[i].length > 0) {
-        productImagesText += `【商品${i}】\n`;
-        productImageData[i].forEach(link => {
-          productImagesText += link + '\n';
-        });
-        productImagesText += '\n';
-      }
-    }
-  }
-  
-  return [
-    timestamp,
-    params.storeType || '',
-    params.storeName || '',
-    params.branchName || '',
-    params.contactPerson || '',
-    params.contactEmail || '',
-    params.contactPhone || '',
-    params.storeAddress || '',
-    params.addressSupplement || '',
-    params.selectedCategory || '',
-    params.selectedSubcategories || '',
-    params.minPrice || '',
-    params.maxPrice || '',
-    params.businessDays || '',
-    params.businessHours || '',
-    params.businessHoursSupplement || '',
-    params.closedDays || '',
-    params.closedDaysSupplement || '',
-    params.websiteUrl || '',
-    params.facebookUrl || '',
-    params.lineUrl || '',
-    params.instagramUrl || '',
-    params.googleBusinessUrl || '',
-    params.linkNotes || '',
-    params.storeIntroduction || '',
-    envAndPriceData.envImageLinks.join('\n'),
-    envAndPriceData.priceListLinks.join('\n'),
-    productsText.trim(),
-    productImagesText.trim()
-  ];
-}
-
 // ===== 查詢功能 =====
 function handleQuery(email) {
   try {
+    if (!email) {
+      return createJsonResponse({
+        success: false,
+        message: '請提供Email'
+      });
+    }
+    
     const sheet = getOrCreateSheet();
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
@@ -441,25 +323,36 @@ function handleQuery(email) {
     const records = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[5] === email) {  // 聯絡Email 在第 6 欄 (index 5)
-        records.push(parseRowToObject(headers, row));
+      if (row[5] === email) {  // 聯絡Email 在第 6 欄
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index];
+        });
+        
+        // 解析商品資料
+        if (row[27]) {
+          try {
+            record['商品列表'] = JSON.parse(row[27]);
+          } catch (e) {
+            record['商品列表'] = [];
+          }
+        }
+        
+        records.push(record);
       }
     }
     
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: true, 
-        data: records 
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createJsonResponse({
+      success: true,
+      count: records.length,
+      data: records
+    });
   } catch (error) {
-    console.log('查詢錯誤: ' + error.toString());
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        message: error.toString() 
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    Logger.log('查詢錯誤: ' + error.toString());
+    return createJsonResponse({
+      success: false,
+      message: error.toString()
+    });
   }
 }
 
@@ -471,112 +364,33 @@ function handleAdminQuery() {
     
     const records = [];
     for (let i = 1; i < data.length; i++) {
-      records.push(parseRowToObject(headers, data[i]));
-    }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: true, 
-        data: records 
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        message: error.toString() 
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function parseRowToObject(headers, row) {
-  const obj = {
-    submitTime: row[0] || '',
-    storeType: row[1] || '',
-    storeName: row[2] || '',
-    branchName: row[3] || '',
-    contactPerson: row[4] || '',
-    contactEmail: row[5] || '',
-    contactPhone: row[6] || '',
-    storeAddress: row[7] || '',
-    addressSupplement: row[8] || '',
-    selectedCategory: row[9] || '',
-    selectedSubcategories: row[10] || '',
-    minPrice: row[11] || '',
-    maxPrice: row[12] || '',
-    businessDays: row[13] || '',
-    businessHours: row[14] || '',
-    businessHoursSupplement: row[15] || '',
-    closedDays: row[16] || '',
-    closedDaysSupplement: row[17] || '',
-    websiteUrl: row[18] || '',
-    facebookUrl: row[19] || '',
-    lineUrl: row[20] || '',
-    instagramUrl: row[21] || '',
-    googleBusinessUrl: row[22] || '',
-    linkNotes: row[23] || '',
-    storeIntroduction: row[24] || '',
-    envImageLinks: row[25] || '',
-    priceListLinks: row[26] || '',
-    products: []
-  };
-  
-  // 解析商品資料
-  const productData = row[27] || '';
-  const imageLinks = row[28] || '';
-  
-  if (productData) {
-    obj.products = parseProducts(productData, imageLinks);
-  }
-  
-  return obj;
-}
-
-function parseProducts(productDataStr, imageLinksStr) {
-  const products = [];
-  
-  try {
-    const productBlocks = productDataStr.split('\n\n');
-    const imageBlocks = imageLinksStr ? imageLinksStr.split('\n\n') : [];
-    
-    productBlocks.forEach((block, index) => {
-      const lines = block.split('\n');
-      const product = {
-        name: '',
-        price: '',
-        description: '',
-        images: []
-      };
-      
-      lines.forEach(line => {
-        if (line.includes('名稱:')) {
-          product.name = line.split('名稱:')[1].trim();
-        } else if (line.includes('價格:')) {
-          product.price = line.split('價格:')[1].trim();
-        } else if (line.includes('描述:')) {
-          product.description = line.split('描述:')[1].trim();
-        }
+      const row = data[i];
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = row[index];
       });
       
-      if (imageBlocks[index]) {
-        const imageLines = imageBlocks[index].split('\n');
-        imageLines.forEach(line => {
-          if (line.startsWith('http')) {
-            product.images.push(line.trim());
-          }
-        });
+      // 解析商品資料
+      if (row[27]) {
+        try {
+          record['商品列表'] = JSON.parse(row[27]);
+        } catch (e) {
+          record['商品列表'] = [];
+        }
       }
       
-      if (product.name) {
-        products.push(product);
-      }
+      records.push(record);
+    }
+    
+    return createJsonResponse({
+      success: true,
+      count: records.length,
+      data: records
     });
   } catch (error) {
-    console.log('解析商品資料錯誤: ' + error.toString());
+    return createJsonResponse({
+      success: false,
+      message: error.toString()
+    });
   }
-  
-  return products;
 }
-
-
